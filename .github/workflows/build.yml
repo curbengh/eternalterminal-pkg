@@ -13,7 +13,7 @@ jobs:
       repo_ver: ${{ steps.repo-ver.outputs.repo_ver }}
     steps:
       - uses: actions/checkout@v3
-      - name: Check latest verion
+      - name: Check latest tag
         id: repo-ver
         run: |
           repo_ver="$(git tag --sort=committerdate | tail -1)"
