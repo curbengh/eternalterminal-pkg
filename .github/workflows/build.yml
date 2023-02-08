@@ -13,6 +13,8 @@ jobs:
       repo_ver: ${{ steps.repo-ver.outputs.repo_ver }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Check latest tag
         id: repo-ver
         run: |
@@ -29,8 +31,8 @@ jobs:
           pkgrel="$(grep -oP '(?<=pkgrel=)[\d]+' './PKGBUILD')"
           echo "upstream_ver=${pkgver}-${pkgrel}" >> "$GITHUB_OUTPUT"
   build_and_release:
-    if: needs.test.outputs.upstream_ver != needs.test.outputs.repo_ver
     needs: test
+    if: needs.test.outputs.upstream_ver != needs.test.outputs.repo_ver
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     timeout-minutes: 60
