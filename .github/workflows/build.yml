@@ -27,8 +27,8 @@ jobs:
         id: upstream-ver
         working-directory: ./eternalterminal
         run: |
-          pkgver=$(grep -oP "(?<=pkgver=)[\d\.']+" './PKGBUILD' | sed "s/'//g")
-          pkgrel="$(grep -oP '(?<=pkgrel=)[\d]+' './PKGBUILD')"
+          pkgver=$(grep -oP "^pkgver='?\K[\d\.]+" './PKGBUILD')
+          pkgrel="$(grep -oP "^pkgrel=\K\d+" './PKGBUILD')"
           echo "upstream_ver=${pkgver}-${pkgrel}" >> "$GITHUB_OUTPUT"
   build_and_release:
     needs: test
