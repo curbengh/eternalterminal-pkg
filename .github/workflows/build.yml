@@ -40,9 +40,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - name: Enable root to run makepkg
-        run: |
-          sed -i '/E_ROOT/d' /usr/bin/makepkg
       - name: Install git
         run: |
           pacman -Syu --noconfirm git
@@ -51,7 +48,9 @@ jobs:
           git clone 'https://aur.archlinux.org/eternalterminal.git'
       - name: Build
         working-directory: ./eternalterminal
+        # Enable root to run makepkg
         run: |
+          sed -i '/E_ROOT/d' /usr/bin/makepkg
           makepkg -s --noconfirm
       - name: Generate hashsums
         working-directory: ./eternalterminal
