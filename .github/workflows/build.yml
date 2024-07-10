@@ -10,29 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upstream_ver: ${{ steps.upstream-ver.outputs.upstream_ver }}
-      repo_ver: ${{ steps.repo-ver.outputs.repo_ver }}
+      repo_tags: ${{ steps.repo-tags.outputs.repo_tags }}
+      build_exist: ${{ steps.build-exist.outputs.build_exist }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Check latest tag
-        id: repo-ver
+      - name: Get repo tags
+        id: repo-tags
         run: |
-          repo_ver="$(git tag --sort=committerdate | tail -1)"
-          echo "repo_ver=${repo_ver}" >> "$GITHUB_OUTPUT"
-      - name: Clone repo
-        run: |
-          git clone 'https://aur.archlinux.org/eternalterminal.git'
-      - name: Check upstream version
+          repo_tags=$(curl -sSL "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" | jq '.[].tag_name')
+          echo "repo_tags=$repo_tags" >> "$GITHUB_OUTPUT"
+      - name: Get upstream version
         id: upstream-ver
-        working-directory: ./eternalterminal
         run: |
+          curl -SL 'https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=eternalterminal' -o "PKGBUILD"
           pkgver=$(grep -oP "^pkgver='?\K[\d\.]+" './PKGBUILD')
           pkgrel="$(grep -oP "^pkgrel=\K\d+" './PKGBUILD')"
           echo "upstream_ver=${pkgver}-${pkgrel}" >> "$GITHUB_OUTPUT"
+      - name: Check if build exist
+        id: build-exist
+        run: |
+          if echo "${{ steps.repo-ver.outputs.repo_tags }}" | grep -q "${{ steps.upstream-ver.outputs.upstream_ver }}"; then
+            echo "build_exist=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build_exist=false" >> "$GITHUB_OUTPUT"
+          fi
   build_and_release:
     needs: test
-    if: needs.test.outputs.upstream_ver != needs.test.outputs.repo_ver
+    if: needs.test.outputs.build_exist == "false"
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     timeout-minutes: 60
