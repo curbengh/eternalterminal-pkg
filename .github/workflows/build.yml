@@ -9,26 +9,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     outputs:
-      upstream_ver: ${{ steps.upstream-ver.outputs.upstream_ver }}
-      repo_tags: ${{ steps.repo-tags.outputs.repo_tags }}
       build_exist: ${{ steps.build-exist.outputs.build_exist }}
     steps:
       - name: Get repo tags
-        id: repo-tags
         run: |
           repo_tags=$(curl -sSL "https://api.github.com/repos/$GITHUB_REPOSITORY/releases" | jq '.[].tag_name')
-          echo "repo_tags=$repo_tags" >> "$GITHUB_OUTPUT"
+          echo "repo_tags=$repo_tags" >> "$GITHUB_ENV"
       - name: Get upstream version
-        id: upstream-ver
         run: |
           curl -SL 'https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=eternalterminal' -o "PKGBUILD"
           pkgver=$(grep -oP "^pkgver='?\K[\d\.]+" './PKGBUILD')
           pkgrel="$(grep -oP "^pkgrel=\K\d+" './PKGBUILD')"
-          echo "upstream_ver=${pkgver}-${pkgrel}" >> "$GITHUB_OUTPUT"
+          echo "upstream_ver=${pkgver}-${pkgrel}" >> "$GITHUB_ENV"
       - name: Check if build exist
         id: build-exist
         run: |
-          if echo "${{ steps.repo-ver.outputs.repo_tags }}" | grep -q "${{ steps.upstream-ver.outputs.upstream_ver }}"; then
+          if echo "$repo_tags" | grep -q "$upstream_ver"; then
             echo "build_exist=true" >> "$GITHUB_OUTPUT"
           else
             echo "build_exist=false" >> "$GITHUB_OUTPUT"
